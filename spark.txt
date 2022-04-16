@@ -1,0 +1,23 @@
+C:\apps\opt\spark-3.2.1-bin-hadoop3.2
+
+
+JAVA_HOME =C:\Program Files\Java\jdk-17.0.1
+PATH = %PATH%;%JAVA_HOME%
+
+SPARK_HOME  = C:\apps\opt\spark-3.2.1-bin-hadoop3.2
+HADOOP_HOME = C:\apps\opt\spark-3.2.1-bin-hadoop3.2
+PATH=%PATH%;%SPARK_HOME%
+
+
+%JAVA_HOME%\bin
+
+C:\#Pycharm Projects\SPARK\Lib\site-packages\pyspark\jars
+
+C:\Users\$en>%SPARK_HOME%\bin\spark-class.cmd org.apache.spark.deploy.history.HistoryServer
+
+pyspark --jars C:\Users\$en\Documents\GitHub\SPARK\jar_files\spark-excel_2.11-0.12.2.jar
+
+pyspark --jars "C:\\Users\\$en\Documents\\GitHub\\SPARK\\jar_files\\spark-excel_2.11-0.12.2.jar"
+
+
+%SPARK_HOME%\bin\spark-shell --packages com.crealytics:spark-excel_2.12:3.0.3_0.15.0
