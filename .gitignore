@@ -1,0 +1,6 @@
+
+*.xml
+*.iml
+*.class
+*.jar
+/jar_files/
