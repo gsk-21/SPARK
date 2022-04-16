@@ -4,7 +4,7 @@ from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 # from pyspark.sql.types import *
 from pyspark.sql.types import StructType, StructField, IntegerType, ArrayType, StringType, DateType, LongType
-from pyspark.sql.functions import struct, when, col
+from pyspark.sql.functions import struct, when, col, lit, expr, concat
 
 
 def struct_field_df():
@@ -151,7 +151,7 @@ def json_df():
     df.show()
 
     # distribute the data across multiple nodes
-    # Allows to create df from an empty list and non-empty list
+    # Allows creating df from an empty list and non-empty list
     print("\nCreating dataframe")
     df = spark.createDataFrame(spark.sparkContext.parallelize(data), schema=json_schema)
     df.show()
@@ -191,6 +191,42 @@ def user_defined_df():
     udf = spark.createDataFrame(data=structure_data, schema=structure_schema)
     udf.printSchema()
     dataframe_display(udf)
+
+
+def update_df():
+    udf_schema = StructType(
+        [
+            StructField("first_name", StringType()),
+            StructField("middle_name", StringType()),
+            StructField("last_name", StringType()),
+            StructField("ID", StringType()),
+            StructField("Gender", StringType()),
+            StructField("Salary", IntegerType())
+        ]
+    )
+    udf = spark.createDataFrame(data=data, schema=udf_schema, verifySchema=True)
+    udf.show()
+    udf.printSchema()
+
+    print("Using expr in concatenating columns")
+
+    updated_df = udf.withColumn("salary grade", when(col("salary").cast(IntegerType()) < 2000, "Low")
+                                .when(
+        (col("salary").cast(IntegerType()) <= 3000) & (col("salary").cast(IntegerType()) >= 2000), "Medium")
+                                .otherwise("High")
+                                ).withColumn("Name", expr("first_name||' '||middle_name||' '||last_name")). \
+        drop("first_name", "middle_name", "last_name"). \
+        select("Name", "salary", "salary grade")
+    updated_df.show()
+
+    print("Using concat() function in concatenating columns")
+    updated_df = udf.withColumn("salary grade", when(col("salary").cast(IntegerType()) < 2000, "Low")
+                                .when(
+        (col("salary").cast(IntegerType()) <= 3000) & (col("salary").cast(IntegerType()) >= 2000), "Medium")
+                                .otherwise("High")
+                                ).withColumn("Name",
+                                             concat(udf.first_name, lit(' '), udf.middle_name, lit(' '), udf.last_name))
+    updated_df.show()
 
 
 def dataframe_display(df):
@@ -263,8 +299,11 @@ try:
         # print("User Defined DF:\n")
         # user_defined_df()
 
-        print("DF from JSON DDL:")
-        json_df()
+        # print("DF from JSON DDL:")
+        # json_df()
+
+        print("Update DF:")
+        update_df()
 
 
 
