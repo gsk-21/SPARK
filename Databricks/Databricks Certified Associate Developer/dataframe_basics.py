@@ -287,64 +287,23 @@ try:
             (("Jen", "Mary", "Brown"), "", "F", -1)
         ]
 
-        # df = spark.read.format("json").load(json_file)
-        # df.printSchema()
+        dataframe = spark.read.format("json").load(json_file)
+        dataframe.printSchema()
 
-        # print("Struct Field DF:\n")
-        # struct_field_df()
+        print("Struct Field DF:\n")
+        struct_field_df()
 
-        # print("DDL DF:\n")
-        # ddl_df()
+        print("DDL DF:\n")
+        ddl_df()
 
-        # print("User Defined DF:\n")
-        # user_defined_df()
+        print("User Defined DF:\n")
+        user_defined_df()
 
-        # print("DF from JSON DDL:")
-        # json_df()
+        print("DF from JSON DDL:")
+        json_df()
 
         print("Update DF:")
         update_df()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 except Exception as error:
     raise error
