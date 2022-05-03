@@ -4,3 +4,12 @@
 *.class
 *.jar
 /jar_files/
+*.parquet
+*.json
+*.dat
+*.csv
+*.xlsx
+*.xlsx
+*.pyc
+*.xlsx
+*.xlsx
