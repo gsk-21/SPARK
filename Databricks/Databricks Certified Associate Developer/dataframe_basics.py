@@ -1,10 +1,10 @@
 import json
-
-from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 # from pyspark.sql.types import *
 from pyspark.sql.types import StructType, StructField, IntegerType, ArrayType, StringType, DateType, LongType
 from pyspark.sql.functions import struct, when, col, lit, expr, concat
+
+import utils
 
 
 def struct_field_df():
@@ -55,7 +55,7 @@ def struct_field_df():
         ]
     )
 
-    customer_df = spark.read.format("json").schema(customer_df_struct_type).load(json_file)
+    customer_df = spark.read.format("json").schema(customer_df_struct_type).load(utils.json_file)
     customer_df.show()
     customer_df.printSchema()
 
@@ -91,7 +91,7 @@ def struct_field_df():
         struct_field_list
     )
 
-    customer_df = spark.read.format("json").schema(customer_df_struct_type).load(json_file)
+    customer_df = spark.read.format("json").schema(customer_df_struct_type).load(utils.json_file)
     # customer_df = spark.read.format("json").load(json_file)
     customer_df.show()
     customer_df.printSchema()
@@ -137,12 +137,12 @@ def ddl_df():
                             """
 
     print("Reading JSON File")
-    customer_df = spark.read.format("json").schema(customer_df_schema_ddl).load(json_file)
+    customer_df = spark.read.format("json").schema(customer_df_schema_ddl).load(utils.json_file)
     customer_df.show()
 
 
 def json_df():
-    ddl_path = data_path + "emp_ddl.json"
+    ddl_path = utils.data_directory + "emp_ddl.json"
     print(json.load(open(ddl_path)))
     json_schema = StructType.fromJson(json.load(open(ddl_path)))
 
@@ -210,22 +210,30 @@ def update_df():
 
     print("Using expr in concatenating columns")
 
-    updated_df = udf.withColumn("salary grade", when(col("salary").cast(IntegerType()) < 2000, "Low")
+    updated_df = udf.withColumn("salary grade",
+                                when(col("salary").cast(IntegerType()) < 2000, "Low")
                                 .when(
-        (col("salary").cast(IntegerType()) <= 3000) & (col("salary").cast(IntegerType()) >= 2000), "Medium")
+                                    (col("salary").cast(IntegerType()) <= 3000) &
+                                    (col("salary").cast(IntegerType()) >= 2000),
+                                    "Medium"
+                                )
                                 .otherwise("High")
                                 ).withColumn("Name", expr("first_name||' '||middle_name||' '||last_name")). \
-        drop("first_name", "middle_name", "last_name"). \
-        select("Name", "salary", "salary grade")
+        drop("first_name", "middle_name", "last_name").select("Name", "salary", "salary grade")
     updated_df.show()
 
     print("Using concat() function in concatenating columns")
-    updated_df = udf.withColumn("salary grade", when(col("salary").cast(IntegerType()) < 2000, "Low")
+    updated_df = udf.withColumn("salary grade",
+                                when(col("salary").cast(IntegerType()) < 2000, "Low")
                                 .when(
-        (col("salary").cast(IntegerType()) <= 3000) & (col("salary").cast(IntegerType()) >= 2000), "Medium")
+                                    (col("salary").cast(IntegerType()) <= 3000) &
+                                    (col("salary").cast(IntegerType()) >= 2000), "Medium"
+                                )
                                 .otherwise("High")
-                                ).withColumn("Name",
-                                             concat(udf.first_name, lit(' '), udf.middle_name, lit(' '), udf.last_name))
+                                ).withColumn(
+                                "Name",
+                                concat(udf.first_name, lit(' '), udf.middle_name, lit(' '), udf.last_name)
+                                )
     updated_df.show()
 
 
@@ -242,66 +250,34 @@ def dataframe_display(df):
     df.show(2, truncate=False)
 
     # Shows top 2 rows and only 25 characters of each column (PySpark)
-    print("Displaying only top 2 rows with column truncated to 25 characters")
+    print("Displaying only top 2 rows with column truncated to 5 characters")
     df.show(2, truncate=5)
 
-    # Shows rows vertically (one line per column value) (PySpark)
+    # Show rows vertically (one line per column value) (PySpark)
     print("Displaying only top 3 rows vertically with column truncated to 25 characters")
     df.show(n=3, truncate=25, vertical=True)
 
 
-# import findspark
-# findspark.init()
-# config("spark.ui.port", 5050)
-# spark = SparkSession.builder.appName("Databricks").getOrCreate()
-# conf = SparkConf().setAppName("Databricks")
-# sc = SparkContext(conf=conf)
-# jars_path = "C:\\Users\\$en\\Documents\\GitHub\\SPARK\\jar_files"
-# conf.set("spark.jars", jars_path + "spark-excel_2.11-0.12.2.jar")
-# sc.setLogLevel("ERROR")
-# df = spark.read.format('json').load(path + "customer.json")
-# df = spark.read.option("header", "true").option("inferSchema", "true").option("delimiter", "|").csv(dat_file)
-# df = spark.read.format('csv').load(csv_file)
 try:
+    with utils.spark as spark:
+        data = utils.data
+        structure_data = utils.structure_data
 
-    data_path = "C:\\Users\\$en\\Documents\\GitHub\\SPARK\\Databricks\\Data\\"
-    # spark = SparkSession.builder.master("local").appName("Databricks").getOrCreate()
-    with SparkSession.builder.master("local").appName("Databricks").getOrCreate() as spark:
-        json_file = data_path + "customer.json"
-        parquet_file = data_path + "address.parquet"
-        csv_file = data_path + "web_sales.csv"
-        dat_file = data_path + "item.dat"
-        tab_file = data_path + "web_sales_excel_ft.prn"
-        data = [
-            ("James", "", "Smith", "36636", "M", 3000),
-            ("Michael", "Rose", "", "40288", "M", 4000),
-            ("Robert", "", "Williams", "42114", "M", 4000),
-            ("Maria", "Anne", "Jones", "39192", "F", 4000),
-            ("Jen", "Mary", "Brown", "", "F", -1)
-        ]
-        structure_data = [
-            (("James", "", "Smith"), "36636", "M", 3100),
-            (("Michael", "Rose", ""), "40288", "M", 4300),
-            (("Robert", "", "Williams"), "42114", "M", 1400),
-            (("Maria", "Anne", "Jones"), "39192", "F", 5500),
-            (("Jen", "Mary", "Brown"), "", "F", -1)
-        ]
-
-        dataframe = spark.read.format("json").load(json_file)
+        dataframe = spark.read.format("json").load(utils.json_file)
         dataframe.printSchema()
 
-        print("Struct Field DF:\n")
-        struct_field_df()
+        # print("Struct Field DF:\n")
+        # struct_field_df()
 
-        print("DDL DF:\n")
-        ddl_df()
+        # print("DDL DF:\n")
+        # ddl_df()
 
-        print("User Defined DF:\n")
-        user_defined_df()
+        # print("DF from JSON DDL:")
+        # json_df()
 
-        print("DF from JSON DDL:")
-        json_df()
-
+        # print("User Defined DF:\n")
+        # user_defined_df()
+        #
         print("Update DF:")
         update_df()
 

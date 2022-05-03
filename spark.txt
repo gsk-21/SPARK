@@ -21,3 +21,56 @@ pyspark --jars "C:\\Users\\$en\Documents\\GitHub\\SPARK\\jar_files\\spark-excel_
 
 
 %SPARK_HOME%\bin\spark-shell --packages com.crealytics:spark-excel_2.12:3.0.3_0.15.0
+
+Linux Setup
+
+sparkuser@sparknode:~$ vi ~/.bashrc
+# Add below lines at the end of the .bashrc file.
+
+export SPARK_HOME=/home/sen-21/spark-3.2.1-bin-hadoop3.2
+export PATH=$PATH:$SPARK_HOME/bin
+
+export SPARK_HOME=/home/sen-21/spark-3.2.1-bin-hadoop3.2
+export PATH=$PATH:$SPARK_HOME/bin
+export PATH=$PATH:~/home/sen-21/anaconda3/bin
+export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
+export PYSPARK_DRIVER_PYTHON="jupyter"
+export PYSPARK_DRIVER_PYTHON_OPTS="notebook"
+export PYSPARK_PYTHON=python3
+export PATH=$PATH:$JAVA_HOME/jre/bin
+
+
+sparkuser@sparknode:~$ source ~/.bashrc
+
+$SPARK_HOME/bin/spark-submit --class org.apache.spark.examples.SparkPi spark/examples/jars/spark-examples_2.12-3.0.1.jar 10
+spark-submit --class org.apache.spark.examples.SparkPi spark/examples/jars/spark-examples_2.12-3.0.1.jar 10
+
+
+Spark Web UI
+
+Web UI - http://localhost:4040/jobs/
+History server - http://localhost:18080/
+
+$SPARK_HOME/conf/spark-defaults.conf
+
+# Enable to store the event log
+spark.eventLog.enabled true
+
+#Location where to store event log
+spark.eventLog.dir file:///tmp/spark-events
+
+#Location from where history server to read event log
+spark.history.fs.logDirectory file:///tmp/spark-events
+
+sparkuser@sparknode:~$ mkdir /tmp/spark-events
+
+sparkuser@sparknode:~$ $SPARK_HOME/sbin/start-history-server.sh
+starting org.apache.spark.deploy.history.HistoryServer, logging to /home/sparkuser/spark/logs/spark-sparkuser-org.apache.spark.deploy.history.HistoryServer-1-sparknode.out
+
+
+
+
+
+
+export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+export PATH=$PATH:$JAVA_HOME/bin
