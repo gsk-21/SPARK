@@ -31,7 +31,7 @@ def get_web_sales_df(spark):
                             ws_net_paid_inc_ship decimal(7,2),ws_net_paid_inc_ship_tax decimal(7,2),
                             ws_net_profit decimal(7,2)
                         """
-    web_sales_df = spark.read.options(header="true", delimiter="|", inferSchema="false").schema(
+    web_sales_df = spark.read.options(header="true", delimiter=",", inferSchema="false").schema(
         web_sales_schema).csv(utils.csv_file)
     web_sales_df.printSchema()
     print("web sales df read success!\n")
