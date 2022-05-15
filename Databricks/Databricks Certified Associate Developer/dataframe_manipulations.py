@@ -240,10 +240,41 @@ def filter_df():
 
 def df_to_list(df: DataFrame):
     print("Converting dataframe to python list object")
-    print("Refer:https://sparkbyexamples.com/pyspark/convert-pyspark-dataframe-column-to-python-list/")
-    import webbrowser
-    url = 'https://sparkbyexamples.com/pyspark/convert-pyspark-dataframe-column-to-python-list/'
-    webbrowser.open_new(url=url)
+    # print("Refer:https://sparkbyexamples.com/pyspark/convert-pyspark-dataframe-column-to-python-list/")
+    # import webbrowser
+    # url = 'https://sparkbyexamples.com/pyspark/convert-pyspark-dataframe-column-to-python-list/'
+    # webbrowser.open_new(url=url)
+    # converts to list of Row objects
+    df = customer_df.take(10)
+    print(type(df))
+    print(df)
+    for i in df:
+        print(i.customer_id, " - ", i.demographics.credit_rating)
+
+    print("\ndf to list using rdd map using index")
+    df = customer_df.limit(10)
+    df_list = df.rdd.map(lambda x: x[3]).collect()
+    print(df_list)
+
+    print("\ndf to list using rdd map using column name")
+    df_list = df.rdd.map(lambda x: x.customer_id).collect()
+    print(df_list)
+
+    print("\ndf to list using rdd flatmap using column name")
+    df_list = df.select("customer_id").rdd.flatMap(lambda x: x).collect()
+    print(df_list)
+
+    print("\ndf to list using rdd flatmap selecting all columns")
+    df_list = df.select("*").rdd.flatMap(lambda x: x).collect()
+    print(df_list)
+
+    print("\nUsing map collect - Gives the list of Row objects")
+    df_list = df.select("*").collect()
+    print(df_list)
+    df.coalesce(1).write.format("json").save(utils.data_directory+"json_test_data")
+
+    # df_list = df.select("customer_id").toPandas()
+    # print(df_list)
 
 
 
