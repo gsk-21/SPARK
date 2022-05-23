@@ -14,3 +14,5 @@
 *.xlsx
 *.xlsx
 Databricks/data/web_sales_excel_tab.txt
+*.crc
+Databricks/data/json_test_data/_SUCCESS
