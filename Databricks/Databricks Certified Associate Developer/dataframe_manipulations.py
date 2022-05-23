@@ -5,6 +5,10 @@ from pyspark.sql.types import *
 from pyspark.sql.dataframe import DataFrame
 
 
+def get_count(df: DataFrame):
+    print("\ncount:", df.count())
+
+
 def display_dataframes(dataframes):
     customer_df = dataframes['customer_df']
     web_sales_df = dataframes['web_sales_df']
@@ -271,12 +275,237 @@ def df_to_list(df: DataFrame):
     print("\nUsing map collect - Gives the list of Row objects")
     df_list = df.select("*").collect()
     print(df_list)
-    df.coalesce(1).write.format("json").save(utils.data_directory+"json_test_data")
+    df.coalesce(1).write.format("json").save(utils.data_directory + "json_test_data")
 
     # df_list = df.select("customer_id").toPandas()
     # print(df_list)
 
 
+def drop_df_rows():
+    data = [
+        [1, 'Monday'],
+        [1, 'Monday'],
+        [2, 'Tuesday'],
+        [3, 'Tuesday'],
+        [3, 'Wednesday'],
+        [4, 'Thursday'],
+        [5, 'Friday'],
+        [6, 'Saturday'],
+        [7, 'Sunday']
+    ]
+
+    schema = StructType(
+        [
+            StructField("ID", IntegerType()),
+            StructField("Days", StringType())
+        ]
+    )
+
+    df = spark.createDataFrame(schema=schema, data=data)
+    df.show()
+
+    print("\nDistinct Values")
+
+    df.distinct().orderBy('id').show()
+
+    print("\nDropping duplicates based on days ")
+
+    df.dropDuplicates(["days"]).orderBy("id").show()
+
+    print("\nDropping duplicates based on id ")
+
+    df.drop_duplicates(['id']).orderBy("id").show()
+
+    print("\nDropping duplicates based on ['id', 'days'] ")
+
+    df.dropDuplicates(['id', 'days']).orderBy("id").show()
+
+    print("\n Dropping duplicates without passing any args (Similar to distinct)")
+
+    df.drop_duplicates().orderBy("id").show()
+
+    # Throws error
+    # print("\nDropping duplicates based on ['id', 'days', 'month'] ")
+    #
+    # df.dropDuplicates(['id', 'days', 'month']).show()
+
+
+def filtering_null():
+    df = customer_df.selectExpr("salutation", "firstname", "lastname", "email_address", "year(birthdate) birthyear ")
+    df.show(10)
+    print("\ndf count:", df.count())
+
+    print("\nWith Single column:")
+
+    df_null = df.where(
+        "salutation is null"
+    )
+    print("\ndf count with null (is null):", df_null.count())
+
+    df_null = df.filter(
+        df.salutation.isNull()
+    )
+    print("\ndf count with null [df.salutation.isNull()] :", df_null.count())
+
+    df_null = df.where(
+        col("salutation").isNull()
+    )
+    print("\ndf count with null [col('salutation').isNull()] :", df_null.count())
+
+    df_not_null = df.where(
+        "salutation is not null"
+    )
+    print("\ndf count with no null (is not null) :", df_not_null.count())
+
+    df_not_null = df.where(
+        df.salutation.isNotNull()
+    )
+    print("\ndf count with no null [df.salutation.isNotNull] :", df_not_null.count())
+
+    df_not_null = df.where(
+        col("salutation").isNotNull()
+    )
+    print("\ndf count with no null [col(salutation).isNotNull] :", df_not_null.count())
+
+    print("\nWith Multiple columns:")
+
+    df_null = df.where(
+        "salutation is null and birthyear is not null"
+    )
+    print("\ndf count with null (is null):", df_null.count())
+
+    df_null = df.filter(
+        df.salutation.isNull() & df.firstname.isNull()
+    )
+    print("\ndf count with null [df.salutation.isNull()] :", df_null.count())
+
+    df_null = df.where(
+        col("salutation").isNull() & col("email_address").isNull()
+    )
+    print("\ndf count with null [col('salutation').isNull()] :", df_null.count())
+
+    df_not_null = df.where(
+        "salutation is not null and lastname is not null"
+    )
+    print("\ndf count with no null (is not null) :", df_not_null.count())
+
+    df_not_null = df.where(
+        df.salutation.isNotNull() & df.firstname.isNotNull()
+    )
+    print("\ndf count with no null [df.salutation.isNotNull] :", df_not_null.count())
+
+    df_not_null = df.where(
+        col("salutation").isNotNull() & col("birthyear").isNotNull() & df['firstname'].isNull()
+    )
+    print("\ndf count with no null [col(salutation).isNotNull] :", df_not_null.count())
+
+
+def handling_null():
+    df = customer_df.selectExpr(
+        "salutation", "firstname", "lastname", "email_address", "year(birthdate) birthyear "
+    ).orderBy("salutation").limit(200)
+    df.show(200)
+
+    get_count(df)
+    # Drops the row which has all the column values has null
+    null_removed = df.na.drop(how="all")
+    null_removed.show(200)
+    get_count(null_removed)
+
+    # Drops the row if any of the column value is null
+    null_removed = df.na.drop(how="any")
+    null_removed.show(200)
+    get_count(null_removed)
+
+    # Drops the row if all the columns specified in the list has null
+    null_removed = df.na.drop(how="all", subset=["firstname", "lastname"])
+    null_removed.show(200)
+    get_count(null_removed)
+
+    # Drops the row if any of the columns specified in the list has null
+    null_removed = df.na.drop(how="any", subset=["firstname", "lastname"])
+    null_removed.show(200)
+    get_count(null_removed)
+
+    # Fills all the null values with whatever given
+    null_filled = df.na.fill("sen's-spark-learning")
+    null_filled.show(200)
+
+    # fills null values based on the values given in the dictionary
+    null_filled = df.na.fill({
+        "salutation": "UNKNOWN",
+        "firstname": "Senthil"
+    })
+    null_filled.show(200)
+
+    # Learn replace***************
+
+
+def sort_rows():
+    df = customer_df.na.drop("any")
+    cols = ["firstname", "lastname", "birthdate"]
+
+    df.sort("firstname").select(cols).show(50)
+
+    df.sort(expr("firstname")).select(cols).show(50)
+
+    df.sort("firstname", col("lastname").desc()).select(cols).show(50)
+
+    df.sort(expr("firstname")).orderBy(
+        expr('month("birthdate")')
+    ).orderBy(
+        col("lastname").desc()
+    ).select("firstname", "lastname", "birthdate").show(50)
+
+
+def group_by():
+    customer_purchases = web_sales_df.selectExpr("ws_bill_customer_sk customer_id", "ws_item_sk item_id").limit(100)
+    df = customer_purchases.groupBy("customer_id")
+    print(df)
+    df.agg(count("item_id")).show()
+    df.agg(sum("item_id").alias("item_sum")).show()
+    df.agg(
+        sum("item_id").alias("item_sum"),
+        count("item_id").alias("item_count")
+    ).orderBy(
+        "item_count"
+    ).show()
+
+
+def df_statistics():
+    web_sales_df.select(max("ws_sales_price")).show()
+    web_sales_df.select(min(col("ws_sales_price"))).show()
+    print("\nUsing select:")
+    web_sales_df.select(
+        min(col("ws_sales_price")).alias("min"),
+        max(col("ws_sales_price")).alias("max"),
+        sum(col("ws_sales_price")).alias("sum"),
+        count(col("ws_sales_price")).alias("count"),
+        mean(col("ws_sales_price")).alias("mean"),
+        avg(col("ws_sales_price")).alias("avg")
+    ).show()
+
+    print("\nUsing agg:")
+
+    web_sales_df.agg(
+        min(col("ws_sales_price")).alias("min"),
+        max(col("ws_sales_price")).alias("max"),
+        sum(col("ws_sales_price")).alias("sum"),
+        count(col("ws_sales_price")).alias("count"),
+        mean(col("ws_sales_price")).alias("mean"),
+        avg(col("ws_sales_price")).alias("avg")
+    ).show()
+
+    print("\ncustomer_df.describe()")
+    customer_df.describe().show()
+
+    print("\ncustomer_df.summary()")
+    customer_df.summary().show()
+
+    print("customer_df count (Includes null values):", customer_df.count())
+    df = customer_df.select(count("firstname").alias("count"))
+    firstname_count = df.collect().pop(0)['count']
+    print("\ncount of firstname alone (Excludes null values):",firstname_count)
 
 try:
     with utils.spark as spark:
@@ -295,7 +524,13 @@ try:
         # remove_columns()
         # arithmetic_operations()
         # filter_df()
-        df_to_list(customer_df)
+        # df_to_list(customer_df)
+        # drop_df_rows()
+        # filtering_null()
+        # handling_null()
+        # sort_rows()
+        # group_by()
+        df_statistics()
 
 
 except Exception as error:
