@@ -505,7 +505,64 @@ def df_statistics():
     print("customer_df count (Includes null values):", customer_df.count())
     df = customer_df.select(count("firstname").alias("count"))
     firstname_count = df.collect().pop(0)['count']
-    print("\ncount of firstname alone (Excludes null values):",firstname_count)
+    print("\ncount of firstname alone (Excludes null values):", firstname_count)
+
+
+def joins():
+    inner_join_df = customer_df.join(address_df, customer_df.address_id == address_df.address_id, "inner")
+    print("inner join :", inner_join_df.count())
+
+    inner_join_df = customer_df.join(address_df, customer_df['address_id'] == address_df['address_id'])
+    print("inner join :", inner_join_df.count())
+
+    df = web_sales_df.join(customer_df, col("customer_id") == col("ws_bill_customer_sk"))
+    print("Without any join type:", df.count())
+    # df.show(100)
+
+    df = web_sales_df.join(customer_df, web_sales_df['ws_bill_customer_sk'] == customer_df['customer_id'], "right")
+    print("Right join:", df.count())
+    print("Column with null values in left table:", df.filter("ws_bill_customer_sk is null").count())
+    print("Column with null values in right table:", df.filter("customer_id is null").count())
+
+    df = web_sales_df.join(customer_df, web_sales_df['ws_bill_customer_sk'] == customer_df['customer_id'], "left")
+    print("left join:", df.count())
+    print("Column with null values in left table:", df.filter("ws_bill_customer_sk is null").count())
+    print("Column with null values in right table:", df.filter("customer_id is null").count())
+
+    df.sort(col("customer_id").asc_nulls_first()).show(10)
+
+
+def append_rows():
+    df1 = customer_df.select("firstname", "lastname", "customer_id").withColumn(
+        "from", lit("df1")
+    )
+
+    df2 = customer_df.select("lastname","firstname", "customer_id").withColumn(
+        "from", lit("df2")
+    )
+
+    union_df = df1.union(df2)
+
+    print("union (Combines rows if the column data type matches)")
+    union_df.sort(col("customer_id")).show(10)
+
+    df1 = customer_df.select("firstname", "lastname", "customer_id").withColumn(
+        "from", lit("df1")
+    )
+
+    df2 = customer_df.select("lastname","firstname", "customer_id").withColumn(
+        "from", lit("df2")
+    )
+
+    union_df = df1.unionByName(df2)
+
+    print("unionByName (Combines rows based on the column names)")
+    union_df.sort(col("customer_id")).show(10)
+
+    print("unionAll is deprecated")
+    df1.unionAll(df2).sort(col("customer_id")).show(10)
+
+    print("Union results in duplicate")
 
 try:
     with utils.spark as spark:
@@ -513,7 +570,7 @@ try:
         # display_dataframes(dataframes=dfs)
         # customer_df = create_dataframes.get_customer_df(spark=spark)
         web_sales_df: DataFrame = create_dataframes.get_web_sales_df(spark=spark)
-        # address_df: DataFrame = create_dataframes.get_address_df(spark=spark)
+        address_df: DataFrame = create_dataframes.get_address_df(spark=spark)
         # item_df: DataFrame = create_dataframes.get_item_df(spark=spark)
         customer_df: DataFrame = create_dataframes.get_customer_df(spark=spark)
 
@@ -530,7 +587,9 @@ try:
         # handling_null()
         # sort_rows()
         # group_by()
-        df_statistics()
+        # df_statistics()
+        # joins()
+        append_rows()
 
 
 except Exception as error:
