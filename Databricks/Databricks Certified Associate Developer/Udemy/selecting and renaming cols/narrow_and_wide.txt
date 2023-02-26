@@ -1,0 +1,19 @@
+Narrow Transformation does not result in shuffling (aka row level transformations)
+
+Some functions
+
+df.select
+df.filter
+df.withColumn
+df.withColumnRenamed
+df.drop
+
+Wide transformation results in shuffling
+For all the wide transformations, we have to deal with group of records based on a key
+
+df.union    (or any set operations)
+df.join     (or any join operations)
+df.sort or df.OrderBy
+df.groupBy
+df.distinct
+

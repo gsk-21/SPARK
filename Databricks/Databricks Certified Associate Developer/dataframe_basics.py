@@ -95,9 +95,10 @@ def struct_field_df():
     # customer_df = spark.read.format("json").load(json_file)
     customer_df.show()
     customer_df.printSchema()
-    print(customer_df.schema.fieldNames())
-    print(customer_df.schema.fields)
+    print("Field Names\n", customer_df.schema.fieldNames())
+    print("Fields\n", customer_df.schema.fields)
 
+    print("\nSchema Field Names")
     for i in customer_df.schema.fieldNames():
         print(i, "-", type(i))
     print("\nfirstname - ", "firstname" in customer_df.schema.fieldNames())
@@ -154,6 +155,10 @@ def json_df():
     # Allows creating df from an empty list and non-empty list
     print("\nCreating dataframe")
     df = spark.createDataFrame(spark.sparkContext.parallelize(data), schema=json_schema)
+    df.show()
+
+    print("Empty List")
+    df = spark.createDataFrame([], schema=json_schema)
     df.show()
 
 
@@ -242,8 +247,8 @@ def dataframe_display(df):
     df.show(2, truncate=False)
 
     # Shows top 2 rows and only 25 characters of each column (PySpark)
-    print("Displaying only top 2 rows with column truncated to 25 characters")
-    df.show(2, truncate=5)
+    print("Displaying only top 2 rows with column truncated to 10 characters")
+    df.show(2, truncate=10)
 
     # Shows rows vertically (one line per column value) (PySpark)
     print("Displaying only top 3 rows vertically with column truncated to 25 characters")
